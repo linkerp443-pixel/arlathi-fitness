@@ -1,0 +1,316 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function userExists() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isSuperAdmin() {
+      return signedIn() && userExists() && (userRole() == 'admin' || userRole() == 'super_admin');
+    }
+
+    function isAdmin() {
+      return isSuperAdmin();
+    }
+
+    function hasAll(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isString(key) {
+      return request.resource.data[key] is string;
+    }
+
+    function isNumber(key) {
+      return request.resource.data[key] is number;
+    }
+
+    function isPositive(key) {
+      return isNumber(key) && request.resource.data[key] >= 0;
+    }
+
+    function oneOf(key, values) {
+      return request.resource.data[key] in values;
+    }
+
+    function userRoleValid() {
+      return oneOf('role', ['admin', 'super_admin', 'staff', 'trainer', 'payment_manager', 'member_registrar']);
+    }
+
+    function memberValid() {
+      return hasAll(['fullName', 'phone', 'level', 'monthlyFee', 'status'])
+        && isString('fullName')
+        && request.resource.data.fullName.size() > 0
+        && request.resource.data.fullName.size() <= 120
+        && isString('phone')
+        && request.resource.data.phone.size() > 0
+        && isString('level')
+        && oneOf('level', ['Basic', 'Standard', 'Premium', 'VIP'])
+        && isPositive('monthlyFee')
+        && oneOf('status', ['Active', 'Inactive']);
+    }
+
+    function trainerValid() {
+      return hasAll(['fullName', 'phone', 'monthlySalary', 'status'])
+        && isString('fullName')
+        && request.resource.data.fullName.size() > 0
+        && isString('phone')
+        && isPositive('monthlySalary')
+        && oneOf('status', ['Active', 'Inactive', 'On Leave']);
+    }
+
+    function employeeValid() {
+      return hasAll(['fullName', 'phone', 'position', 'salary', 'status'])
+        && isString('fullName')
+        && request.resource.data.fullName.size() > 0
+        && isString('phone')
+        && isString('position')
+        && isPositive('salary')
+        && oneOf('status', ['Active', 'Inactive', 'On Leave']);
+    }
+
+    function scheduleValid() {
+      return hasAll(['trainerId', 'trainingType', 'day', 'startTime', 'endTime', 'memberIds'])
+        && isString('trainerId')
+        && request.resource.data.trainerId.size() > 0
+        && isString('trainingType')
+        && oneOf('day', ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'])
+        && isString('startTime')
+        && isString('endTime')
+        && request.resource.data.memberIds is list;
+    }
+
+    function paymentValid() {
+      return hasAll(['memberDocId', 'memberName', 'month', 'year', 'amountDue', 'amountPaid', 'remainingBalance', 'status', 'paymentDate', 'method', 'receivedBy'])
+        && isString('memberDocId')
+        && isString('memberName')
+        && isNumber('month')
+        && request.resource.data.month >= 1
+        && request.resource.data.month <= 12
+        && isNumber('year')
+        && request.resource.data.year >= 2000
+        && request.resource.data.year <= 2100
+        && isPositive('amountDue')
+        && isNumber('amountPaid')
+        && request.resource.data.amountPaid > 0
+        && request.resource.data.amountPaid <= request.resource.data.amountDue
+        && isPositive('remainingBalance')
+        && oneOf('status', ['Paid', 'Partially Paid', 'Unpaid'])
+        && isString('paymentDate')
+        && oneOf('method', ['Cash', 'EVC Plus', 'Zaad', 'Sahal', 'Bank Transfer', 'Other'])
+        && isString('receivedBy');
+    }
+
+    function debtValid() {
+      return hasAll(['memberDocId', 'memberName', 'month', 'year', 'amountDue', 'amountPaid', 'outstanding', 'status'])
+        && isString('memberDocId')
+        && isString('memberName')
+        && isNumber('month')
+        && request.resource.data.month >= 1
+        && request.resource.data.month <= 12
+        && isNumber('year')
+        && request.resource.data.year >= 2000
+        && request.resource.data.year <= 2100
+        && isPositive('amountDue')
+        && isPositive('amountPaid')
+        && isPositive('outstanding')
+        && oneOf('status', ['Paid', 'Partially Paid', 'Unpaid']);
+    }
+
+    function expenseValid() {
+      return hasAll(['title', 'category', 'amount', 'date', 'recordedBy'])
+        && isString('title')
+        && request.resource.data.title.size() > 0
+        && isString('category')
+        && isNumber('amount')
+        && request.resource.data.amount > 0
+        && isString('date')
+        && isString('recordedBy');
+    }
+
+    function taskValid() {
+      return hasAll(['title', 'status', 'priority'])
+        && isString('title')
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && oneOf('status', ['Backlog', 'To Do', 'In Progress', 'Done'])
+        && oneOf('priority', ['Low', 'Medium', 'High', 'Urgent']);
+    }
+
+    // ---------------------------------------------------------------------
+    // Users / profiles
+    // ---------------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == userId
+        && hasAll(['uid', 'email', 'displayName', 'role'])
+        && isString('uid')
+        && isString('email')
+        && isString('displayName')
+        && userRoleValid()
+        && (isSelf(userId) || isSuperAdmin());
+      allow update: if request.resource.data.uid == userId
+        && isString('uid')
+        && isString('email')
+        && isString('displayName')
+        && userRoleValid()
+        && (isSuperAdmin() || (isSelf(userId) && request.resource.data.role == resource.data.role));
+      allow delete: if isSuperAdmin() && userId != request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------------
+    // Gym operations
+    // ---------------------------------------------------------------------
+    match /members/{memberId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && memberValid();
+      allow update: if signedIn() && memberValid();
+      allow delete: if isAdmin();
+    }
+
+    match /trainers/{trainerId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && trainerValid();
+      allow update: if signedIn() && trainerValid();
+      allow delete: if isAdmin();
+    }
+
+    match /employees/{employeeId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && employeeValid();
+      allow update: if signedIn() && employeeValid();
+      allow delete: if isAdmin();
+    }
+
+    match /trainingSchedules/{scheduleId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && scheduleValid();
+      allow update: if signedIn() && scheduleValid();
+      allow delete: if isAdmin();
+    }
+
+    match /tasks/{taskId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && taskValid();
+      allow update: if signedIn() && taskValid();
+      allow delete: if signedIn();
+    }
+
+    match /attendance/{recordId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && hasAll(['personType', 'personId', 'personName', 'date', 'status'])
+        && oneOf('personType', ['member', 'trainer', 'employee'])
+        && isString('personId')
+        && isString('personName')
+        && isString('date')
+        && oneOf('status', ['Present', 'Absent', 'Late', 'Leave']);
+      allow update: if signedIn()
+        && oneOf('status', ['Present', 'Absent', 'Late', 'Leave']);
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Financial records (protected)
+    // ---------------------------------------------------------------------
+    match /payments/{paymentId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && paymentValid();
+      allow update: if isAdmin() && paymentValid();
+      allow delete: if isAdmin();
+    }
+
+    match /debts/{debtId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && debtValid();
+      allow update: if signedIn() && debtValid();
+      allow delete: if isAdmin();
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && expenseValid();
+      allow update: if isAdmin() && expenseValid();
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // WhatsApp communication logs
+    // ---------------------------------------------------------------------
+    match /whatsappMessages/{messageId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && hasAll(['memberDocId', 'memberName', 'message', 'type', 'status', 'channel'])
+        && isString('message')
+        && isString('type')
+        && oneOf('type', [
+          'individual', 'bulk', 'group_invitation', 'group_announcement', 'reminder', 'expiry', 'welcome'
+        ])
+        && oneOf('status', ['prepared', 'opened', 'sent', 'delivered', 'failed'])
+        && request.resource.data.channel == 'whatsapp';
+      allow update: if signedIn()
+        && oneOf('status', ['prepared', 'opened', 'sent', 'delivered', 'failed']);
+      allow delete: if isAdmin();
+    }
+
+    match /whatsappCampaigns/{campaignId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && hasAll(['name', 'type', 'recipientCount', 'status'])
+        && isString('name')
+        && request.resource.data.name.size() > 0
+        && isString('type')
+        && isNumber('recipientCount')
+        && request.resource.data.recipientCount > 0
+        && oneOf('status', ['prepared', 'opened', 'sent', 'delivered', 'failed']);
+      allow update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+        && hasAll(['action', 'collection', 'userId', 'createdAt'])
+        && isString('action')
+        && isString('collection')
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

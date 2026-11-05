@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validImage() {
+      return request.resource != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /members/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn() && validImage();
+    }
+
+    match /trainers/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn() && validImage();
+    }
+
+    match /employees/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn() && validImage();
+    }
+
+    match /settings/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn() && validImage();
+    }
+
+    match /{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if signedIn() && validImage();
+    }
+  }
+}

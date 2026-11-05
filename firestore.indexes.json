@@ -1,0 +1,194 @@
+{
+  "firestore": {
+    "indexes": [
+      {
+        "collectionGroup": "members",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "status", "order": "ASCENDING" },
+          { "fieldPath": "level", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "members",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "trainerId", "order": "ASCENDING" },
+          { "fieldPath": "fullName", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "payments",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "memberDocId", "order": "ASCENDING" },
+          { "fieldPath": "year", "order": "DESCENDING" },
+          { "fieldPath": "month", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "payments",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "year", "order": "DESCENDING" },
+          { "fieldPath": "month", "order": "DESCENDING" },
+          { "fieldPath": "status", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "payments",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "status", "order": "ASCENDING" },
+          { "fieldPath": "paymentDate", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "payments",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "memberDocId", "order": "ASCENDING" },
+          { "fieldPath": "paymentDate", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "debts",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "memberDocId", "order": "ASCENDING" },
+          { "fieldPath": "year", "order": "DESCENDING" },
+          { "fieldPath": "month", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "debts",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "year", "order": "DESCENDING" },
+          { "fieldPath": "month", "order": "DESCENDING" },
+          { "fieldPath": "status", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "debts",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "status", "order": "ASCENDING" },
+          { "fieldPath": "outstanding", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "debts",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "period", "order": "ASCENDING" },
+          { "fieldPath": "status", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "expenses",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "category", "order": "ASCENDING" },
+          { "fieldPath": "date", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "expenses",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "employeeId", "order": "ASCENDING" },
+          { "fieldPath": "date", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "expenses",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "trainerId", "order": "ASCENDING" },
+          { "fieldPath": "date", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "trainingSchedules",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "trainerId", "order": "ASCENDING" },
+          { "fieldPath": "day", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "trainingSchedules",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "day", "order": "ASCENDING" },
+          { "fieldPath": "startTime", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "attendance",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "personType", "order": "ASCENDING" },
+          { "fieldPath": "personId", "order": "ASCENDING" },
+          { "fieldPath": "date", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "attendance",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "date", "order": "DESCENDING" },
+          { "fieldPath": "personType", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "notifications",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "userId", "order": "ASCENDING" },
+          { "fieldPath": "read", "order": "ASCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "whatsappMessages",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "campaignId", "order": "ASCENDING" },
+          { "fieldPath": "createdAt", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "whatsappMessages",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "type", "order": "ASCENDING" },
+          { "fieldPath": "createdAt", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "whatsappMessages",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "status", "order": "ASCENDING" },
+          { "fieldPath": "createdAt", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "whatsappCampaigns",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "createdAt", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "auditLogs",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "createdAt", "order": "DESCENDING" }
+        ]
+      }
+    ],
+    "fieldOverrides": []
+  }
+}
